@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
+</head>
+<body>
+  <h3>Web Cắt Video Short (9:16)</h3>
+  <input type="file" id="uploader">
+  <script>
+    const { createFFmpeg, fetchFile } = FFmpeg;
+    const ffmpeg = createFFmpeg({ log: true });
+
+    document.getElementById('uploader').onchange = async (e) => {
+      const { name } = e.target.files[0];
+      await ffmpeg.load();
+      ffmpeg.FS('writeFile', name, await fetchFile(e.target.files[0]));
+      
+      // Lệnh cắt video 16:9 thành 9:16 (crop giữa)
+      await ffmpeg.run('-i', name, '-vf', 'crop=ih*(9/16):ih', 'output.mp4');
+      
+      const data = ffmpeg.FS('readFile', 'output.mp4');
+      const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'short.mp4';
+      a.click();
+    };
+  </script>
+</body>
+</html>
